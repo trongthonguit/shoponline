@@ -1,0 +1,58 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.Mvc;
+using OnlineShop.Areas.Employee.Models;
+using OnlineShop.Models;
+
+namespace OnlineShop.Areas.Employee.Controllers
+{
+    public class LoginCustomerController : Controller
+    {
+      
+
+        Entities Context = new Entities();
+        public LoginCustomerController()
+        { }
+
+        
+        public ActionResult Login()
+        {
+            if (Session["usercus"] != null)
+            {
+                Session["usercus"] = null;
+                Session["usernamecus"] = null;
+                Session["rolecus"] = null;
+                if (Request.Cookies["cartIds"] != null)
+                {
+                    var c = new HttpCookie("cartIds");
+                    c.Expires = DateTime.Now.AddDays(-1);
+                    Response.Cookies.Add(c);
+                } 
+            }
+            return PartialView(); 
+        }
+        [HttpPost]
+        public ActionResult Login(string name, string pass)
+        {
+           
+            bool listn = Context.Customers.Where(p => p.UserName.Equals(name)).ToList().Count() == 0 ? false : true;
+
+            if (listn)
+            {
+                bool listp = Context.Customers.Where(p => p.Pass.Equals(pass)).ToList().Count() == 0 ? false : true;
+                if (listp)
+                {
+                    var cus = Context.Customers.Where(p => p.UserName.Equals(name) && (p.Pass.Equals(pass))).FirstOrDefault();
+                    Session["usercus"] = cus.CustomerID;
+                    Session["usernamecus"] = cus.LastName +  " "+ cus.FristName;
+                    Session["rolecus"] = cus.RolesID;
+                    return JavaScript("window.location = '" + Url.Action("GetProduct", "Product") + "'");
+                }
+            }
+           
+            return JavaScript("window.location = '" + Url.Action("Login", "LoginCustomer") + "'");
+        }
+    }
+}
